@@ -1,0 +1,78 @@
+html, body {
+	background-color: #C2E7DA;
+	width: 100%;
+	height: 100%;
+}
+
+header {
+	position: absolute;
+	top: 5px;
+	padding-left: 100px;
+	padding-top: 10px;
+	width: 100%;
+}
+
+footer {
+	position: absolute;
+	bottom: 5px;
+	padding-left: 100px;
+	padding-top: 10px;
+	width: 100%;
+	text-align: center;
+	background-color: rgba(235, 102, 9, 1);
+	font-size: 14pt;
+	color: white;
+}
+
+h1 {
+	font-size: calc(30px + 2vw);
+}
+
+.panel-header {
+	display: inline-block;
+}
+
+#headOne {
+	color: #005f4f;
+	display: inline;
+}
+
+#headTwo {
+	color: #ea650f;
+	display: inline;
+}
+
+input[placeholder] {
+	font-size: calc(12px + 1.2vw);
+}
+
+button {
+	width: 50%;
+	height: 60%;
+}
+
+i {
+	font-size: calc(12px + 1vw);
+}
+
+.panel {
+	background-color: #8693AB;
+	text-align: center;
+	/*Below css for centering the login panel on the page*/
+	position: absolute;
+	padding: 0px 50px 0px 50px;
+	margin: auto;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	min-width: 300px;
+	width: 40%;
+	min-height: 350px;
+	height: 40%;
+}
+
+#logo {
+	height: 50px;
+	width: 200px;
+}
