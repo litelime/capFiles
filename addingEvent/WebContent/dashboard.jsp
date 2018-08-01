@@ -1,3 +1,4 @@
+<%@page import="dao.bookings.BookingsJdbcTemplate"%>
 <%@page import="java.util.*"%>
 
 <!DOCTYPE html>
@@ -25,10 +26,32 @@
 
 <body>
 
-	<%
-		
-	%>
+	
+<%@page import="dao.bookings.*, dao.resources.*" %>
 
+<%
+	List<Bookings> allBookings = new BookingsJdbcTemplate().getAll();
+	out.write("<table id='dataTable' border=solid style='display:none'> ");
+	out.write("<tr>");
+	out.write("<td>Title</td>");
+	out.write("<td>Start</td>");
+	out.write("<td>End</td>");
+	out.write("<td>ID</td>");
+	out.write("</tr>");
+	
+	for(Bookings b: allBookings){
+		out.write("<tr>");
+		String resourceName = new ResourcesJdbcTemplate().search(b.getResourceId()).getResourceName();
+
+		out.write("<td>"+resourceName+"</td>");
+		out.write("<td>"+b.getBookedStartTime()+"</td>");
+		out.write("<td>"+b.getBookedEndTime()+"</td>");		
+		out.write("<td>"+b.getBookingId()+"</td>");
+		out.write("</tr>");
+	}
+	out.write("</table>");
+ 
+%>
 
 	<div class="container" id="allPage">
 		<nav class="navbar navbar-default navbar-static-top">
@@ -55,8 +78,6 @@
 						<li><a href="#">Add A Resource</a></li>
 						<li><a href="#">Log Out</a></li>
 					</ul>
-
-
 
 				</div>
 			</div>
@@ -96,49 +117,60 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<div class="modal-body" id="eventChangeBody">
-					<div class="input-group">
-						<div class="input-group-addon">
-							<span class='glyphicon glyphicon-calendar'></span> <span
-								class="input-group-text">Room</span>
+					<div class="modal-body" id="eventChangeBody">
+						
+						<div class="input-group">
+							<div class="input-group-addon">
+								<span class='glyphicon glyphicon-calendar'></span> <span
+									class="input-group-text">Booking ID</span>
+							</div>
+						
+							<input class="form-control input-md" type="text"
+								id="bookingId" name="bookingId" readonly="readonly"/>
 						</div>
-						<input class="form-control input-md" type="text" id="editRoom"
-							name="editRoom" readonly="readonly" />
-					</div>
-					<div class="input-group">
-						<div class="input-group-addon">
-							<span class='glyphicon glyphicon-calendar'></span> <span
-								class="input-group-text">From</span>
+						<div class="input-group">
+							<div class="input-group-addon">
+								<span class='glyphicon glyphicon-calendar'></span> <span
+									class="input-group-text">Room</span>
+							</div>
+							<input class="form-control input-md" type="text" id="editRoom"
+								name="editRoom" readonly="readonly" />
 						</div>
-						<input class="form-control input-md" type="text"
-							placeholder="DD-MM" id="editDate" name="editDate" required />
-					</div>
+						<div class="input-group">
+							<div class="input-group-addon">
+								<span class='glyphicon glyphicon-calendar'></span> <span
+									class="input-group-text">From</span>
+							</div>
+							<input class="form-control input-md" type="text"
+								placeholder="DD-MM" id="editDate" name="editDate" required />
+						</div>
+	
 
-					<div class="input-group">
-						<div class="input-group-addon">
-							<span class='glyphicon glyphicon-time'></span> <span
-								class="input-group-text">From</span>
+						<div class="input-group">
+							<div class="input-group-addon">
+								<span class='glyphicon glyphicon-time'></span> <span
+									class="input-group-text">From</span>
+							</div>
+							<input class="form-control input-md" type="time"
+								placeholder="HH:MM" id="editTimeFrom" name="editTimeFrom"
+								required>
 						</div>
-						<input class="form-control input-md" type="time"
-							placeholder="HH:MM" id="editTimeFrom" name="editTimeFrom"
-							required>
-					</div>
-
-					<div class="input-group">
-						<div class="input-group-addon">
-							<span class='glyphicon glyphicon-time'></span> <span
-								class="input-group-text">To</span>
+	
+						<div class="input-group">
+							<div class="input-group-addon">
+								<span class='glyphicon glyphicon-time'></span> <span
+									class="input-group-text">To</span>
+							</div>
+							<input class="form-control input-md" type="time"
+								placeholder="HH:MM" id="editTimeTo" name="editTimeTo" required>
 						</div>
-						<input class="form-control input-md" type="time"
-							placeholder="HH:MM" id="editTimeTo" name="editTimeTo" required>
 					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary"
-						data-dismiss="modal">Close</button>
-					<button type="button" class="btn btn-danger">Delete</button>
-					<button type="button" class="btn btn-primary">Save changes</button>
-				</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-dismiss="modal">Close</button>
+							<button type="button" data-dismiss="modal" class="btn btn-danger" id="deleteButton">Delete</button>
+					</div>
+				
 			</div>
 		</div>
 	</div>
@@ -155,7 +187,6 @@
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
-				<form action="./addEvent.jsp">
 
 					<div class="modal-body" id="eventAddBody">
 						<div class="input-group">
@@ -196,9 +227,8 @@
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary"
 							data-dismiss="modal">Cancel</button>
-						<button type='submit' class="btn btn-primary">Add Event</button>
+						<button type='button' data-dismiss="modal" class="btn btn-primary" id="addButton">Add Event</button>
 					</div>
-				</form>
 
 			</div>
 		</div>
@@ -206,171 +236,203 @@
 
 	<script>
 		var active = "view";
+		
+		$(document).ready(function () {
+	        	
+		   	$("#deleteButton").click(function(){
+				var id = $("#bookingId").val();
+				console.log(id);
+			    $.ajax({
+			    	url:"./deleteEvent.jsp", 
+			    	success: function(result){
+					    //remove the event from the calendar
+					    $("#dispCal").fullCalendar( 'removeEvents',id );
 
-		$(document)
-				.ready(
-						function() {
+			    	},
+			    	fail: function(result){
+			    		console.log(result);
+			    	},
+			   	 	data: {"bookingId": id}
+			    });
 
-							console.log("Ready");
 
-							$('input[name="date"]').daterangepicker({
-								minDate : moment().startOf('hour'),
-								alwaysShowCalendars : true,
-								locale : {
-									format : 'YY/MM/DD'
-								}
-							});
+			});
+		   	
+		   	$("#addButton").click(function(){
+		   		var date= $("#date").val();
+				var timeTo = $("#timeTo").val();
+				var timeFrom = $("#timeFrom").val();
+				
+			    $.ajax({
+			    	url:"./addEvent.jsp", 
+			    	success: function(result){
+			    		console.log(result);
+			    		
+			    		var fields = result.split(",");
+			    		var start = fields[4].trim().replace("bookedStartTime=","");
+			    		var end = fields[5].trim().replace("bookedEndTime=","");
+						start = start.replace(" ","T");
+						end = end.replace(" ","T");
+			    		
+						var title = fields[6];
+			    		var id = fields[7];
+						var backgroundColor= "green";
+			    		
+			        	if(title.includes("SCRUM"))
+			        		backgroundColor= "Red";
+			        	else if(title.includes("Conference"))
+			        		backgroundColor = "Blue";			
+			        	
+			            var newEvent = {
+			            		id: id,
+			                    title: title,
+			                    start: start,
+			                    end: end,
+			                    backgroundColor: backgroundColor
+			            };
+			            
+					    $("#dispCal").fullCalendar( 'renderEvent', newEvent ,true );
+				        
+			    	},
+			    	fail: function(result){
+			    		console.log(result);
+			    	},
+			   	 	data: {"date": date, "timeTo": timeTo, "timeFrom":timeFrom}
+			    });
 
-							$('input[name="editDate"]').daterangepicker({
-								minDate : moment().startOf('hour'),
-								alwaysShowCalendars : true,
-								locale : {
-									format : 'YY/MM/DD'
-								}
-							});
+			});
 
-							$("#view").css("background-color", "lightblue");
+	        	var eventsArray = [];
+	        	var formattedEventData = [];
+	        	
+	        	//create an array of event objects for the Calendar on the page. 
+	        	$('#dataTable tr').not(":first").each(function() {
+		        	var newEvent = [];
+		        	
+	        		var start = this.cells[1].innerHTML;
+	        		start = start.replace(" ","T");
+	        		
+	        		var end = this.cells[2].innerHTML;
+	        		end = end.replace(" ","T");
 
-							$('#dispCal')
-									.fullCalendar(
-											{
-												header : {
-													left : 'prev,next today',
-													center : 'title',
-													right : 'agendaWeek,agendaDay'
-												},
-												height : 500,
-												defaultDate : '2018-08-07',
-												defaultView : 'agendaWeek',
-												selectable : true,
-												selectConstraint : {
-													start : moment().startOf(
-															'day'),
-													end : moment().startOf(
-															'day').add(6,
-															'months'),
-												},
-												select : function(startDate,
-														endDate) {
-													$("#roomName").html(
-															"Scrum 3");
-													$("#date").data(
-															'daterangepicker')
-															.setStartDate(
-																	startDate);
-													$("#date")
-															.data(
-																	'daterangepicker')
-															.setEndDate(endDate);
-													$("#timeFrom")
-															.val(
-																	startDate
-																			.format("HH:mm"));
-													$("#timeTo")
-															.val(
-																	endDate
-																			.format("HH:mm"));
-													$("#addEventModal").modal(
-															"show");
-												},
+	        		var title = this.cells[0].innerHTML;
+	        		
+	        		var id = this.cells[3].innerHTML;
+	        		
+	            	newEvent[0] = title;
+		        	newEvent[1] = start;
+		        	newEvent[2] = end;
+		        	if(title.includes("SCRUM"))
+		        		newEvent[3] = "Red";
+		        	else if(title.includes("Conference"))
+		        		newEvent[3] = "Blue";
+		        	
+		        	newEvent[4] = id;
+		        	eventsArray.push(newEvent);
+	        	});
+	        	
+	        	//place all the events into an array formatted for FullCalendar
+		        for (var k = 0; k < eventsArray.length; k++) {
+		       		formattedEventData.push({
+		                title: eventsArray[k][0],
+		       	        start: eventsArray[k][1],
+		      	        end:   eventsArray[k][2],
+		      	        backgroundColor: eventsArray[k][3],
+		      	        id: eventsArray[k][4]
+		       	    });
+		        }
+	        	     	        	
+	            $('input[name="date"]').daterangepicker({
+	                minDate: moment().startOf('hour'),
+	                alwaysShowCalendars: true,
+	                locale: {
+	                    format: 'YY/MM/DD'
+	                }
+	            });
 
-												eventMouseover : function(
-														calEvent, js) {
-													var tooltip = '<div class="tooltipevent" style="width:100px;height:100px;background:lightblue;position:absolute;z-index:10001;">'
-															+ calEvent.title
-															+ "<br/>"
-															+ calEvent.start
-																	.format('MM/DD, h:mm a')
-															+ '</div>';
-													$("body").append(tooltip);
-													$(this)
-															.mouseover(
-																	function(e) {
-																		$(this)
-																				.css(
-																						'z-index',
-																						10000);
-																		$(
-																				'.tooltipevent')
-																				.fadeIn(
-																						'500');
-																		$(
-																				'.tooltipevent')
-																				.fadeTo(
-																						'10',
-																						1.9);
-																	})
-															.mousemove(
-																	function(e) {
-																		$(
-																				'.tooltipevent')
-																				.css(
-																						'top',
-																						e.pageY + 10);
-																		$(
-																				'.tooltipevent')
-																				.css(
-																						'left',
-																						e.pageX + 20);
-																	});
+	            $('input[name="editDate"]').daterangepicker({
+	                minDate: moment().startOf('hour'),
+	                alwaysShowCalendars: true,
+	                locale: {
+	                    format: 'YY/MM/DD'
+	                }
+	            });
 
-												},
+	            $("#view").css("background-color", "lightblue");
 
-												eventMouseout : function(
-														calEvent, jsEvent) {
-													$(this).css('z-index', 8);
-													$('.tooltipevent').remove();
-												},
+	            $('#dispCal')
+	                .fullCalendar(
+	                    {
+	                        header: {
+	                            left: 'prev,next today',
+	                            center: 'title',
+	                            right: 'agendaWeek,agendaDay'
+	                        },
+	                        themeSystem: 'bootstrap3',	                       
+	                        minTime: "06:00:00",
+	                        maxTime: "18:00:00",
+	                        height: 500,
+	                        defaultView: 'agendaWeek',
+	                        selectable: true,
+	                        selectConstraint: {
+	                            start: moment().startOf(
+	                                'day'),
+	                            end: moment().startOf(
+	                                'day').add(6,
+	                                    'months'),
+	                        },
+	                        select: function (startDate, endDate) {
+	                            $("#roomName").html("Scrum 3");
+	                            $("#date").data('daterangepicker').setStartDate(startDate);
+	                            $("#date").data('daterangepicker').setEndDate(endDate);
+	                            $("#timeFrom").val(startDate.format("HH:mm"));
+	                            $("#timeTo").val(endDate.format("HH:mm"));
+	                            $("#addEventModal").modal("show");
+	                        },
 
-												eventClick : function(calEvent,
-														jsEvent, view) {
+	                        eventMouseover: function (calEvent, js) {
+	                            var tooltip = '<div class="tooltipevent" style="padding:10px;width:250px;height:60px;background:lightblue;position:absolute;z-index:10001;">'
+	                                + calEvent.title
+	                                + "<br/>"
+	                                + calEvent.start.format('MM/DD, h:mm a')
+	                                + " - "
+	                                + calEvent.end.format('MM/DD, h:mm a')
+	                                + '</div>';
+	                            $("body").append(tooltip);
+	                            $(this)
+	                                .mouseover(
+	                                    function (e) {$(this).css('z-index',10000);
+	                                        $('.tooltipevent').fadeIn('500');
+	                                        $('.tooltipevent').fadeTo('10',1.9);
+	                                        $('.tooltipevent').css('top', e.pageY);
+	                                        $('.tooltipevent').css('left',e.pageX);
+	                                    })
+	                        },
 
-													$("#editDate")
-															.data(
-																	'daterangepicker')
-															.setStartDate(
-																	calEvent.start);
-													$("#editDate")
-															.data(
-																	'daterangepicker')
-															.setEndDate(
-																	calEvent.end);
-													$("#editTimeFrom")
-															.val(
-																	calEvent.start
-																			.format("HH:mm"));
-													$("#editTimeTo")
-															.val(
-																	calEvent.end
-																			.format("HH:mm"));
-													$("#editRoom").val(
-															calEvent.title);
+	                        eventMouseout: function ( calEvent, jsEvent) {
+	                            $(this).css('z-index', 8);
+	                            $('.tooltipevent').remove();
+	                        },
 
-													$("#changeEventModal")
-															.modal('show');
+	                        eventClick: function (calEvent,jsEvent, view) {
 
-												},
+	                            $("#editDate").data('daterangepicker').setStartDate(calEvent.start);
+	                            $("#editDate").data('daterangepicker').setEndDate(calEvent.end);
+	                            $("#editTimeFrom").val(calEvent.start.format("HH:mm"));
+	                            $("#editTimeTo").val(calEvent.end.format("HH:mm"));
+	                            $("#editRoom").val(calEvent.title);
+								$("#bookingId").val(calEvent.id);
+	                            $("#changeEventModal").modal('show');
 
-												eventLimit : true, // allow "more" link when too many events
-												events : [
-												          
-														{
-															title : 'Scrum Room 3',
-															start : '2018-08-10T09:00:00',
-															end : '2018-08-10T12:00:00',
-															backgroundColor : 'blue'
-														},
-														{
-															title : 'Conference Room 1',
-															start : '2018-08-10T09:00:00',
-															end : '2018-08-10T12:00:00',
-															backgroundColor : 'red'
+	                        },
 
-														} ]
+	                        eventLimit: true, // allow "more" link when too many events
+	                        events: formattedEventData
 
-											});
+	                    });
 
-						});
+	        });
+		
 	</script>
 
 </body>
